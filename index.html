@@ -1,0 +1,274 @@
+<html>
+<head>
+  <title>Multi-voice assistant</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script type="text/javascript">
+    var accessToken = "dafc86bb648b4deca941ac934deda6e2",
+      baseUrl = "https://api.api.ai/v1/",
+      $speechInput,
+      $recBtn,
+      recognition,
+      messageRecording = "Recording...",
+      messageCouldntHear = "I couldn't hear you, could you say that again?",
+      messageInternalError = "Oh no, there has been an internal server error",
+      messageSorry = "I'm sorry, I don't have the answer to that yet.",
+      a_music = 'audio/full-music.m4a',
+      a_news1 = 'audio/news_bull.mp3',
+      a_news2 = 'audio/news_trump.mp3',
+      a_news3 = 'audio/news_drones.mp3',
+      a_weather = 'audio/weather.m4a',
+      a_cooking1 = 'audio/cooking_cookies.m4a',
+      a_cooking2 = 'audio/cooking_pasta.m4a';
+
+      const audio_obj = {
+      'a_music': 'audio/full-music.m4a',
+      'a_news1': 'audio/news_bull.mp3',
+      'a_news2': 'audio/news_trump.mp3',
+      'a_news3': 'audio/news_drones.mp3',
+      'a_weather': 'audio/weather.m4a',
+      'a_cooking1': 'audio/cooking_cookies.m4a',
+      'a_cooking2': 'audio/cooking_pasta.m4a'
+      };
+
+      var audio = document.createElement('audio');
+
+    $(document).ready(function() {
+      $speechInput = $("#speech");
+      $recBtn = $("#rec");
+
+
+      $(".text_sample").on("click", function() {
+          audio.src = window[this.id];
+          audio.play();
+      });
+
+      function match(input, obj) {
+        var matched = Object.keys(obj).find(key => input.toLowerCase().search(key) > -1);
+        return obj[matched] || null;
+      }
+
+      $speechInput.keypress(function(event) {
+        if (event.which == 13) {
+          event.preventDefault();
+          send();
+        }
+      });
+      $recBtn.on("click", function(event) {
+        switchRecognition();
+      });
+    });
+
+    function startRecognition() {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+          recognition.interimResults = false;
+
+      recognition.onstart = function(event) {
+        respond(messageRecording);
+        updateRec();
+      };
+      recognition.onresult = function(event) {
+        recognition.onend = null;
+
+        var text = "";
+          for (var i = event.resultIndex; i < event.results.length; ++i) {
+            text += event.results[i][0].transcript;
+          }
+          setInput(text);
+        stopRecognition();
+      };
+      recognition.onend = function() {
+        respond(messageCouldntHear);
+        stopRecognition();
+      };
+      recognition.lang = "en-US";
+      recognition.start();
+    }
+
+    function stopRecognition() {
+      if (recognition) {
+        recognition.stop();
+        recognition = null;
+      }
+      updateRec();
+    }
+
+    function switchRecognition() {
+      if (recognition) {
+        stopRecognition();
+      } else {
+        startRecognition();
+      }
+    }
+
+    function setInput(text) {
+      $speechInput.val(text);
+      send();
+    }
+    function send() {
+      const keywords = ["music","tech","news","weather","cookies","pasta"];
+      const audio_urls = ['audio/full-music.m4a','audio/news_drones.mp3','audio/news_bull.mp3','audio/weather.m4a','audio/cooking_cookies.m4a','audio/cooking_pasta.m4a'];
+
+      var text = $speechInput.val();
+      text = text.toLowerCase();
+      for(var i = 0; i < keywords.length; i++){
+          if(text.includes(keywords[i])){
+          audio.src = audio_urls[i];
+          audio.play();
+          break;
+        }
+      }
+    }
+
+    function updateRec() {
+      $recBtn.text(recognition ? "Stop" : "Speak");
+    }
+
+
+
+    function prepareResponse(val) {
+      var debugJSON = JSON.stringify(val, undefined, 2),
+        spokenResponse = val.result.speech;
+
+      respond(spokenResponse);
+      debugRespond(debugJSON);
+    }
+
+    function respond(val) {
+      if (val == "") {
+        val = messageSorry;
+      }
+
+      if (val !== messageRecording) {
+        var msg = new SpeechSynthesisUtterance();
+        msg.voiceURI = "native";
+        msg.text = val;
+        msg.lang = "en-US";
+        window.speechSynthesis.speak(msg);
+      }
+
+
+
+      $("#spokenResponse").addClass("is-active").find(".spoken-response__text").html(val);
+    }
+  </script>
+  <style type="text/css">
+    html {
+      box-sizing: border-box;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      background: url(purple-abstract-blur-bokeh.jpg) no-repeat center fixed;
+      background-size: cover;
+      font-family: "Titillium Web", Arial, sans-serif;
+      font-size: 20px;
+      margin: 0;
+    }
+    .container {
+      position: fixed;
+      top: 35%;
+      left: 50%;
+      -webkit-transform: translate(-50%, -50%);
+    }
+    input {
+      background-color: #000;
+      border: 1px solid #fff;
+      color: #e6d6e8;
+      font-family: "Titillium Web";
+      font-size: 20px;
+      line-height: 43px;
+      padding: 0 0.75em;
+      width: 400px;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    input:active, input:focus, textarea:active, textarea:focus {
+      outline: 1px solid #ccc;
+    }
+    .btn {
+      background-color: #000;
+      border: 1px solid #fff;
+      color: #e6d6e8;
+      cursor: pointer;
+      display: inline-block;
+      font-family: "Titillium Web";
+      font-size: 20px;
+      line-height: 43px;
+      padding: 0 0.75em;
+      text-align: center;
+      text-transform: uppercase;
+
+    }
+    .btn:hover {
+      background-color: #af72af;
+      color: #000;
+    }
+    .debug {
+      bottom: 5px;
+      position: fixed;
+      right: 5px;
+      font-size:12px;
+      color:#e6d6e8;
+    }
+    .debug a {
+      color:#aaa;
+    }
+    .debug__content {
+      font-size: 14px;
+      max-height: 0;
+      overflow: hidden;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    .debug__content.is-active {
+      display: block;
+      max-height: 500px;
+    }
+    .debug__btn {
+      width: 100%;
+    }
+    .spoken-response {
+      max-height: 0;
+      overflow: hidden;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    .spoken-response.is-active {
+      max-height: 400px;
+    }
+    .spoken-response__text {
+      background-color: #46281e;
+      color: #e6d6e8;
+      padding: 1em;
+    }
+    .samples a {
+      color:#666;
+    }
+    .text_sample {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <input id="speech" type="text">
+    <button id="rec" class="btn">Speak</button>
+    <div id="spokenResponse" class="spoken-response">
+      <div class="spoken-response__text"></div>
+    </div>
+    <div class="samples">Click "speak" and say a something similar to<br /> the following senteces or just click on one of them:<br />
+      <a class="text_sample" id="a_weather">&ldquo;Weather forecast please&rdquo;</a><br />
+      <a class="text_sample" id="a_cooking1">&ldquo;Tell me how to make cookies&rdquo;</a><br />
+      <a class="text_sample" id="a_cooking2">&ldquo;I'm looking for a pasta receipe&rdquo;</a><br />
+      <a class="text_sample" id="a_news1">&ldquo;Read the news please&rdquo;</a><br />
+      <a class="text_sample" id="a_music">&ldquo;Play some rock music&rdquo;</a>  <br />
+    </div>
+  </div>
+<div class="debug">Text to speech from:
+  <a href="http://www.acapela-group.com/" target="_blank"> http://www.acapela-group.com/</a> and
+  <a href="https://www.naturalreaders.com/online/" target="_blank">https://www.naturalreaders.com/online/</a>
+ </div>
+  <link href="https://fonts.googleapis.com/css?family=Titillium+Web:200" rel="stylesheet" type="text/css">
+</body>
+</html>
